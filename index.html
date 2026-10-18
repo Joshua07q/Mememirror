@@ -1,0 +1,1489 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style></head><body>
+<title>Memecoin Mirror</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@100..125,500..900&family=Instrument+Sans:wght@400..700&family=JetBrains+Mono:wght@400..700&display=swap">
+<style>
+/* Layout: one column on phones. From 960px the trade bench sits left and the
+   wallet ledger right. Real data is plain ink on paper; everything that is a
+   test duplicate carries the crash-test yellow mark. */
+:root {
+  --paper: #E8EBEF;
+  --card: #F8F9FB;
+  --ink: #12171D;
+  --ink-2: #4F5A66;
+  --rule: #CBD2DA;
+  --test: #F4BE2C;
+  --test-ink: #1C1600;
+  --up: #0B7550;
+  --on-up: #FFFFFF;
+  --down: #C23333;
+  --on-down: #FFFFFF;
+  --warn: #9A5B00;
+  --focus: #1D5FD6;
+  --font-display: "Archivo", "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
+  --font-body: "Instrument Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #0D1116;
+    --card: #151A21;
+    --ink: #E8ECF1;
+    --ink-2: #98A4B0;
+    --rule: #27303A;
+    --test: #F4BE2C;
+    --test-ink: #1C1600;
+    --up: #3DD598;
+    --on-up: #05231A;
+    --down: #FF7070;
+    --on-down: #2B0808;
+    --warn: #F0B34A;
+    --focus: #7BAAFF;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #0D1116;
+  --card: #151A21;
+  --ink: #E8ECF1;
+  --ink-2: #98A4B0;
+  --rule: #27303A;
+  --test: #F4BE2C;
+  --test-ink: #1C1600;
+  --up: #3DD598;
+  --on-up: #05231A;
+  --down: #FF7070;
+  --on-down: #2B0808;
+  --warn: #F0B34A;
+  --focus: #7BAAFF;
+  color-scheme: dark;
+}
+body { background: var(--paper); color: var(--ink); font-family: var(--font-body); font-size: 15px; line-height: 1.45; }
+* { box-sizing: border-box; }
+button, input, select { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.sr { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+.mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.up { color: var(--up); }
+.down { color: var(--down); }
+.warn { color: var(--warn); }
+.muted { color: var(--ink-2); }
+
+.app { max-width: 1080px; margin-inline: auto; padding-inline: 16px; padding-block: 16px 40px; display: flex; flex-direction: column; gap: 14px; }
+
+/* header */
+.top { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.brand { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.mark { width: 34px; height: 34px; flex: none; }
+.brand h1 { margin: 0; font: 800 19px/1.05 var(--font-display); font-stretch: 125%; letter-spacing: 0.01em; text-transform: uppercase; }
+.brand p { margin: 2px 0 0; font-size: 12.5px; color: var(--ink-2); }
+.wallet { display: flex; align-items: baseline; gap: 8px; background: var(--test); color: var(--test-ink); padding: 7px 12px; border-radius: 6px; }
+.wallet .k { font: 700 10px/1 var(--font-mono); letter-spacing: 0.1em; }
+.wallet .v { font: 700 18px/1 var(--font-mono); font-variant-numeric: tabular-nums; }
+.wallet .u { font: 600 12px/1 var(--font-mono); }
+
+.status { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 12.5px; color: var(--ink-2); padding-block: 2px; }
+.status .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--ink-2); flex: none; }
+.status.live .dot { background: var(--up); }
+.status.sample, .status.stale { color: var(--ink); }
+.status.sample .dot, .status.stale .dot { background: var(--test); }
+.status .msg { min-width: 0; flex: 1 1 240px; }
+.linkbtn { background: none; border: 0; padding: 0; color: var(--focus); text-decoration: underline; text-underline-offset: 2px; }
+
+.grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; align-items: start; }
+@media (min-width: 960px) { .grid { grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 18px; } }
+.col { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+
+.panel { background: var(--card); border: 1px solid var(--rule); border-radius: 10px; padding: 14px; min-width: 0; }
+.label { font: 600 11px/1.2 var(--font-body); letter-spacing: 0.09em; text-transform: uppercase; color: var(--ink-2); }
+.panel-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 10px; }
+.sym { text-transform: none; letter-spacing: 0; font-family: var(--font-mono); }
+.tag-test { display: inline-block; background: var(--test); color: var(--test-ink); font: 700 10px/1 var(--font-mono); letter-spacing: 0.1em; padding: 3px 6px; border-radius: 3px; vertical-align: middle; }
+
+/* find */
+.find form { display: flex; gap: 8px; }
+.find input[type="text"] { flex: 1 1 auto; min-width: 0; height: 44px; padding: 0 12px; background: var(--paper); border: 1px solid var(--rule); border-radius: 8px; font-size: 15px; }
+.find input::placeholder { color: var(--ink-2); }
+.btn { height: 44px; padding: 0 16px; border-radius: 8px; border: 1px solid var(--ink); background: var(--ink); color: var(--paper); font-weight: 600; }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.btn.ghost { background: transparent; color: var(--ink); border-color: var(--rule); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; align-items: center; }
+.chips .label { margin-right: 4px; }
+.chip { height: 30px; padding: 0 10px; border-radius: 6px; border: 1px solid var(--rule); background: transparent; font: 500 12.5px var(--font-mono); display: inline-flex; align-items: center; gap: 6px; }
+.chip:hover { border-color: var(--ink-2); }
+.chip[aria-pressed="true"] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.hint { margin: 10px 0 0; font-size: 13px; color: var(--ink-2); }
+.hint.err { color: var(--down); }
+.results { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-direction: column; border-top: 1px solid var(--rule); }
+.results li { border-bottom: 1px solid var(--rule); }
+.row-btn { width: 100%; display: grid; grid-template-columns: 34px minmax(0, 1fr) auto; gap: 10px; align-items: center; text-align: left; background: none; border: 0; padding: 9px 2px; }
+.row-btn:hover { background: color-mix(in srgb, var(--ink) 4%, transparent); }
+.row-btn .nm, .row-btn .sub, .blk { display: block; }
+.row-btn .nm { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.row-btn .sub { font-size: 12.5px; color: var(--ink-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.row-btn .rt { text-align: right; font: 500 12.5px var(--font-mono); font-variant-numeric: tabular-nums; }
+
+.av { position: relative; width: 34px; height: 34px; border-radius: 50%; flex: none; display: grid; place-items: center; overflow: hidden; background: hsl(var(--h, 210) 32% 38%); color: #fff; font: 700 14px var(--font-display); }
+.av img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+
+/* token card */
+.tk-head { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.tk-head .who { min-width: 0; flex: 1 1 auto; }
+.tk-head .nm { font: 700 17px/1.2 var(--font-display); overflow-wrap: anywhere; }
+.tk-head .sub { font-size: 12.5px; color: var(--ink-2); display: flex; gap: 6px; flex-wrap: wrap; align-items: center; margin-top: 2px; }
+.price-row { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
+.chart-wrap { margin-top: 14px; border: 1px solid var(--rule); border-radius: 8px; overflow: hidden; background: var(--paper); }
+.chart-head { display: flex; justify-content: space-between; align-items: center; padding: 8px 10px; border-bottom: 1px solid var(--rule); }
+.chart { display: block; width: 100%; height: 190px; }
+.chart-empty { height: 190px; display: grid; place-items: center; padding: 16px; color: var(--ink-2); text-align: center; }
+.price { font: 600 28px/1.1 var(--font-mono); font-variant-numeric: tabular-nums; letter-spacing: -0.02em; overflow-wrap: anywhere; }
+.pill { font: 600 12px/1 var(--font-mono); padding: 4px 6px; border-radius: 4px; border: 1px solid currentColor; }
+.note { font-size: 12.5px; color: var(--ink-2); margin: 6px 0 0; }
+.ledger { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); margin-top: 14px; border: 1px solid var(--rule); border-radius: 8px; overflow: hidden; }
+.ledger > div { padding: 10px 12px; min-width: 0; }
+.ledger > div + div { border-left: 1px solid var(--rule); background: color-mix(in srgb, var(--test) 10%, transparent); }
+.ledger h3 { margin: 0 0 8px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.ledger dl { margin: 0; display: grid; gap: 6px; }
+.ledger dl > div { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; min-width: 0; }
+.ledger dt { font-size: 12.5px; color: var(--ink-2); flex: none; }
+.ledger dd { margin: 0; font: 500 12.5px var(--font-mono); font-variant-numeric: tabular-nums; text-align: right; overflow-wrap: anywhere; min-width: 0; }
+.tk-foot { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-top: 12px; font-size: 12.5px; color: var(--ink-2); }
+.tk-foot a { color: var(--focus); }
+.empty { padding-block: 6px; }
+.empty h2 { margin: 0 0 6px; font: 700 17px var(--font-display); }
+.empty p { margin: 0 0 8px; color: var(--ink-2); max-width: 62ch; }
+.empty ol { margin: 0; padding-left: 18px; color: var(--ink-2); display: grid; gap: 4px; }
+
+/* trade */
+.seg { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--rule); border-radius: 8px; overflow: hidden; }
+.seg button { height: 40px; border: 0; background: transparent; font-weight: 600; }
+.seg button + button { border-left: 1px solid var(--rule); }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+.seg button:disabled { opacity: 0.4; cursor: not-allowed; }
+.amt { margin-top: 12px; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; border: 1px solid var(--rule); border-radius: 8px; background: var(--paper); }
+.amt input { height: 52px; border: 0; background: transparent; padding: 0 12px; font: 600 22px var(--font-mono); font-variant-numeric: tabular-nums; min-width: 0; width: 100%; }
+.amt .unit { padding-right: 12px; font: 600 13px var(--font-mono); color: var(--ink-2); }
+.amt:focus-within { outline: 2px solid var(--focus); outline-offset: 2px; }
+.amt input:focus-visible { outline: none; }
+.quote { margin: 12px 0 0; display: grid; gap: 6px; }
+.quote > div { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; font-size: 13.5px; }
+.quote dt { color: var(--ink-2); }
+.quote dd { margin: 0; font: 500 13px var(--font-mono); font-variant-numeric: tabular-nums; text-align: right; overflow-wrap: anywhere; }
+.quote .big dd { font-weight: 700; font-size: 15px; }
+.quote .msg { display: block; color: var(--ink-2); font-size: 13.5px; }
+.quote .msg.err { color: var(--down); }
+.quote .msg.warn { color: var(--warn); }
+.act { margin-top: 12px; width: 100%; height: 50px; border: 0; border-radius: 8px; font: 700 16px var(--font-display); background: var(--act); color: var(--on-act); }
+.act:disabled { opacity: 0.45; cursor: not-allowed; }
+[data-side="buy"] { --act: var(--up); --on-act: var(--on-up); }
+[data-side="sell"] { --act: var(--down); --on-act: var(--on-down); }
+.receipt { margin: 12px 0 0; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--rule); font-size: 13.5px; }
+.receipt strong { font-weight: 700; }
+.receipt.ok { border-color: var(--up); }
+.receipt.bad { border-color: var(--down); }
+details.cfg { margin-top: 12px; border-top: 1px solid var(--rule); padding-top: 10px; }
+details.cfg summary { cursor: pointer; font-size: 13px; color: var(--ink-2); }
+.cfg-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-top: 10px; }
+.cfg-grid label { display: grid; gap: 4px; font-size: 12px; color: var(--ink-2); }
+.cfg-grid input { height: 38px; padding: 0 10px; border: 1px solid var(--rule); border-radius: 6px; background: var(--paper); font: 500 14px var(--font-mono); width: 100%; min-width: 0; }
+
+/* wallet ledger */
+.equity { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.equity .big { font: 700 30px/1.1 var(--font-mono); font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+.stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--rule); }
+.stats .label { display: block; margin-bottom: 4px; }
+.stats .mono { font-size: 13.5px; font-weight: 500; overflow-wrap: anywhere; }
+.advisor { margin-top: 12px; padding: 10px 12px; border: 1px solid var(--rule); border-radius: 8px; background: color-mix(in srgb, var(--focus) 5%, transparent); }
+.advisor strong { display: block; margin-bottom: 3px; }
+.advisor p { margin: 0; color: var(--ink-2); font-size: 13px; }
+.notify-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+.notify-row .hint { margin: 0; font-size: 12px; }
+.pos { list-style: none; margin: 0; padding: 0; }
+.pos li { border-top: 1px solid var(--rule); }
+.pos li:first-child { border-top: 0; }
+.pos .row-btn { grid-template-columns: 34px minmax(0, 1fr) auto; }
+.hist { list-style: none; margin: 0; padding: 0; font-size: 13px; }
+.hist li { display: grid; grid-template-columns: 44px 52px minmax(0, 1fr) auto; gap: 8px; align-items: baseline; padding: 7px 0; border-top: 1px solid var(--rule); }
+.hist li:first-child { border-top: 0; }
+.hist .t { font: 500 12px var(--font-mono); color: var(--ink-2); }
+.hist .sd { font: 700 11px var(--font-mono); letter-spacing: 0.06em; }
+.hist .what { min-width: 0; overflow-wrap: anywhere; }
+.hist .r { font: 500 12.5px var(--font-mono); text-align: right; font-variant-numeric: tabular-nums; }
+.reset-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 10px; }
+.foot { font-size: 12.5px; color: var(--ink-2); max-width: 90ch; margin: 4px 0 0; }
+
+@media (max-width: 420px) {
+  .price { font-size: 24px; }
+  .equity .big { font-size: 26px; }
+  .hist li { grid-template-columns: 40px 46px minmax(0, 1fr); }
+  .hist .r { grid-column: 3; text-align: left; }
+  .ledger { grid-template-columns: minmax(0, 1fr); }
+  .ledger > div + div { border-left: 0; border-top: 1px solid var(--rule); }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .btn, .chip, .act { transition: opacity 0.15s, background-color 0.15s; }
+}
+</style>
+
+<div class="app">
+  <header class="top">
+    <div class="brand">
+      <svg class="mark" viewBox="0 0 34 34" aria-hidden="true">
+        <circle cx="17" cy="17" r="14" fill="none" stroke="currentColor" stroke-width="2.5"/>
+        <path d="M17 3a14 14 0 0 1 0 28z" fill="var(--test)" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/>
+        <path d="M3 17h28" stroke="currentColor" stroke-width="2.5"/>
+      </svg>
+      <div>
+        <h1>Memecoin Mirror</h1>
+        <p>Real Solana pools, test tokens, test SOL.</p>
+      </div>
+    </div>
+    <div class="wallet" aria-live="polite" aria-label="Test wallet balance">
+      <span class="k">TEST WALLET</span><span class="v" id="bal">10.0000</span><span class="u">SOL</span>
+    </div>
+  </header>
+
+  <div class="status" id="status" role="status">
+    <span class="dot"></span><span class="msg">Connecting to market data...</span>
+  </div>
+
+  <main class="grid">
+    <div class="col">
+      <section class="panel find" aria-label="Find a token">
+        <form id="findForm" autocomplete="off">
+          <label for="q" class="sr">Token address or name</label>
+          <input type="text" id="q" name="q" placeholder="Paste a token address or search a name" spellcheck="false" autocapitalize="off" autocorrect="off" inputmode="text">
+          <button class="btn" type="submit" id="findBtn">Find</button>
+        </form>
+        <div class="chips" id="chips"></div>
+        <p class="hint" id="findHint" hidden></p>
+        <ul class="results" id="results" hidden></ul>
+      </section>
+
+      <section class="panel" id="tokenCard" aria-label="Mirrored token"></section>
+      <section class="panel" id="tradePanel" aria-label="Trade" hidden></section>
+    </div>
+
+    <aside class="col" aria-label="Test wallet">
+      <section class="panel" id="summary" aria-label="Equity"></section>
+      <section class="panel" id="positions" aria-label="Open positions"></section>
+      <section class="panel" id="history" aria-label="Trade history"></section>
+      <section class="panel" id="resetPanel" aria-label="Reset wallet"></section>
+    </aside>
+  </main>
+
+  <p class="foot">Prices and pool depth come from real Solana pools. Trades, balances and tokens are simulated and stay in this browser. Real fills can be worse: bots, sandwiching, failed transactions and rug pulls are not modelled beyond your slippage setting. Not financial advice.</p>
+</div>
+
+<script>
+/*
+ * Mirror engine: pure functions, no DOM, no network.
+ *
+ * A "mirror pool" is a copy of a real Solana pool's depth (token reserve and
+ * SOL-equivalent reserve) at the real market price. Test trades run against
+ * that copy with a constant-product curve, so fees and price impact scale
+ * with the real pool's size. Nothing here touches a chain.
+ */
+(function (root, factory) {
+  if (typeof module === "object" && module.exports) module.exports = factory();
+  else root.MirrorEngine = factory();
+})(typeof self !== "undefined" ? self : this, function () {
+  "use strict";
+
+  const SOL_MINT = "So11111111111111111111111111111111111111112";
+  const USDC_MINT = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
+  const USDT_MINT = "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB";
+  const STABLES = new Set([USDC_MINT, USDT_MINT]);
+
+  // Estimated total swap fee per DEX, in basis points. These are defaults for
+  // display and can be overridden in settings; real fees vary per pool.
+  const DEX_FEE_BPS = {
+    pumpfun: 100,
+    pumpswap: 25,
+    raydium: 25,
+    meteora: 25,
+    orca: 30,
+  };
+  const DEFAULT_FEE_BPS = 30;
+  const BASE_NETWORK_FEE_SOL = 0.000005;
+
+  const BASE58 = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
+  const MINT_RE = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
+
+  const num = (v) => {
+    const n = typeof v === "number" ? v : parseFloat(v);
+    return Number.isFinite(n) ? n : 0;
+  };
+
+  function isValidMint(s) {
+    return typeof s === "string" && MINT_RE.test(s.trim());
+  }
+
+  // Deterministic fake address for the mirror token. Not a real mint.
+  function mirrorIdFor(mint) {
+    let h = 2166136261 >>> 0;
+    let out = "";
+    const src = "mirror:" + mint;
+    for (let i = 0; i < 44; i++) {
+      h = (h ^ (src.charCodeAt(i % src.length) + i)) >>> 0;
+      h = Math.imul(h, 16777619) >>> 0;
+      h = (h ^ (h >>> 13)) >>> 0;
+      out += BASE58[h % 58];
+    }
+    return out;
+  }
+
+  function pairHasQuote(pair, mint) {
+    return !!(pair && pair.quoteToken && pair.quoteToken.address === mint);
+  }
+
+  function liquidityUsd(pair) {
+    return num(pair && pair.liquidity && pair.liquidity.usd);
+  }
+
+  // Pick the deepest pair for a base token, preferring SOL / USDC / USDT quotes.
+  function pickBestPair(pairs, mint) {
+    const list = (pairs || []).filter(
+      (p) => p && p.chainId === "solana" && p.baseToken && p.baseToken.address === mint
+    );
+    if (!list.length) return null;
+    const rank = (p) => {
+      const q = p.quoteToken && p.quoteToken.address;
+      const preferred = q === SOL_MINT || STABLES.has(q) ? 1 : 0;
+      return [preferred, liquidityUsd(p), num(p.volume && p.volume.h24)];
+    };
+    list.sort((a, b) => {
+      const ra = rank(a);
+      const rb = rank(b);
+      for (let i = 0; i < ra.length; i++) if (ra[i] !== rb[i]) return rb[i] - ra[i];
+      return 0;
+    });
+    return list[0];
+  }
+
+  // Collapse a mixed list of pairs (search results, batch lookups) to one best
+  // pair per Solana base token, deepest first.
+  function bestPairPerToken(pairs) {
+    const mints = [];
+    const seen = new Set();
+    (pairs || []).forEach((p) => {
+      if (!p || p.chainId !== "solana" || !p.baseToken) return;
+      const m = p.baseToken.address;
+      if (m && !seen.has(m)) {
+        seen.add(m);
+        mints.push(m);
+      }
+    });
+    return mints
+      .map((m) => pickBestPair(pairs, m))
+      .filter(Boolean)
+      .sort((a, b) => liquidityUsd(b) - liquidityUsd(a));
+  }
+
+  // SOL/USD implied by a SOL-quoted pair (exact), or null.
+  function solUsdFromPair(pair) {
+    if (!pairHasQuote(pair, SOL_MINT)) return null;
+    const usd = num(pair.priceUsd);
+    const nat = num(pair.priceNative);
+    return usd > 0 && nat > 0 ? usd / nat : null;
+  }
+
+  // SOL/USD from a lookup of the SOL token itself: deepest SOL/stable pair.
+  function solUsdFromSolPairs(pairs) {
+    const list = (pairs || []).filter(
+      (p) =>
+        p &&
+        p.chainId === "solana" &&
+        p.baseToken &&
+        p.baseToken.address === SOL_MINT &&
+        p.quoteToken &&
+        STABLES.has(p.quoteToken.address) &&
+        num(p.priceUsd) > 0
+    );
+    if (!list.length) return null;
+    list.sort((a, b) => liquidityUsd(b) - liquidityUsd(a));
+    return num(list[0].priceUsd);
+  }
+
+  /*
+   * Build the mirror pool from a real pair.
+   * Returns { ok:false, reason } when the pair can't be simulated.
+   */
+  function buildMirror(pair, solUsdFallback, footprint) {
+    if (!pair || !pair.baseToken) return { ok: false, reason: "no-pair" };
+    const realPriceUsd = num(pair.priceUsd);
+    if (!(realPriceUsd > 0)) return { ok: false, reason: "no-price" };
+
+    const solUsd = solUsdFromPair(pair) || num(solUsdFallback);
+    if (!(solUsd > 0)) return { ok: false, reason: "no-sol-price" };
+    const realPriceSol = realPriceUsd / solUsd;
+
+    const liq = pair.liquidity || {};
+    let realBase = num(liq.base);
+    if (!(realBase > 0) && num(liq.usd) > 0) realBase = num(liq.usd) / 2 / realPriceUsd;
+    if (!(realBase > 0)) return { ok: false, reason: "no-liquidity" };
+    const realQuote = realBase * realPriceSol;
+
+    // Mirror pool = real pool + the test trader's own footprint (net reserve
+    // changes from earlier test trades), so price impact persists like it would
+    // in a real pool. Clamped so a rug or LP pull can't flip a reserve negative.
+    const fp = footprint || { dB: 0, dQ: 0 };
+    const floorFrac = 0.001;
+    const baseReserve = Math.max(realBase + num(fp.dB), realBase * floorFrac);
+    const quoteReserveSol = Math.max(realQuote + num(fp.dQ), realQuote * floorFrac);
+    const priceSol = quoteReserveSol / baseReserve;
+    const priceUsd = priceSol * solUsd;
+
+    const info = pair.info || {};
+    const dexId = String(pair.dexId || "").toLowerCase();
+    const mint = pair.baseToken.address;
+    const symbol = String(pair.baseToken.symbol || "TOKEN").slice(0, 16);
+
+    return {
+      ok: true,
+      mint,
+      name: String(pair.baseToken.name || symbol).slice(0, 48),
+      symbol,
+      mirrorSymbol: "t" + symbol,
+      mirrorId: mirrorIdFor(mint),
+      image: typeof info.imageUrl === "string" ? info.imageUrl : "",
+      dexId,
+      pairAddress: pair.pairAddress || "",
+      url: typeof pair.url === "string" ? pair.url : "",
+      quoteSymbol: pair.quoteToken ? String(pair.quoteToken.symbol || "") : "",
+      priceUsd,
+      priceSol,
+      realPriceUsd,
+      realPriceSol,
+      hasFootprint: !!(fp.dB || fp.dQ),
+      solUsd,
+      baseReserve,
+      quoteReserveSol,
+      realBaseReserve: realBase,
+      feeBps: DEX_FEE_BPS[dexId] != null ? DEX_FEE_BPS[dexId] : DEFAULT_FEE_BPS,
+      liquidityUsd: num(liq.usd),
+      fdv: num(pair.fdv),
+      marketCap: num(pair.marketCap),
+      volume24h: num(pair.volume && pair.volume.h24),
+      change5m: pair.priceChange ? num(pair.priceChange.m5) : 0,
+      change1h: pair.priceChange ? num(pair.priceChange.h1) : 0,
+      change24h: pair.priceChange ? num(pair.priceChange.h24) : 0,
+      createdAt: num(pair.pairCreatedAt),
+      syncedAt: Date.now(),
+    };
+  }
+
+  const effBps = (pool, settings) => {
+    const o = settings && settings.feeBpsOverride;
+    if (o !== null && o !== undefined && o !== "" && Number.isFinite(Number(o)) && Number(o) >= 0) {
+      return Number(o);
+    }
+    return pool.feeBps;
+  };
+
+  /*
+   * Quotes use a constant-product curve (x*y=k).
+   * priceImpactPct is the paid/received price versus mid, excluding the pool fee.
+   */
+  function quoteBuy(pool, solIn, bps) {
+    const B = pool.baseReserve;
+    const Q = pool.quoteReserveSol;
+    const feeSol = (solIn * bps) / 1e4;
+    const net = solIn - feeSol;
+    const out = (B * net) / (Q + net);
+    return {
+      side: "buy",
+      amountIn: solIn,
+      amountOut: out,
+      feeSol,
+      priceImpactPct: (net / Q) * 100,
+      execPriceSol: out > 0 ? solIn / out : 0,
+      bps,
+    };
+  }
+
+  function quoteSell(pool, tokensIn, bps) {
+    const B = pool.baseReserve;
+    const Q = pool.quoteReserveSol;
+    const feeTokens = (tokensIn * bps) / 1e4;
+    const net = tokensIn - feeTokens;
+    const solOut = (Q * net) / (B + net);
+    return {
+      side: "sell",
+      amountIn: tokensIn,
+      amountOut: solOut,
+      feeSol: feeTokens * (Q / B),
+      priceImpactPct: (net / (B + net)) * 100,
+      execPriceSol: tokensIn > 0 ? solOut / tokensIn : 0,
+      bps,
+    };
+  }
+
+  function networkCost(settings) {
+    const p = num(settings && settings.priorityFeeSol);
+    return BASE_NETWORK_FEE_SOL + Math.max(0, p);
+  }
+
+  const minOutFor = (quote, slipPct) => quote.amountOut * (1 - Math.max(0, num(slipPct)) / 100);
+
+  function newState(startSol) {
+    const s = num(startSol) > 0 ? num(startSol) : 10;
+    return {
+      v: 1,
+      startSol: s,
+      sol: s,
+      realizedSol: 0,
+      positions: {},
+      footprints: {},
+      trades: [],
+      settings: { slipPct: 15, priorityFeeSol: 0.001, feeBpsOverride: "" },
+    };
+  }
+
+  const clone = (o) => JSON.parse(JSON.stringify(o));
+  const EPS = 1e-9;
+
+  /*
+   * Run a trade against `fillPool` (the freshest mirror pool at confirm time).
+   * req: { side, amount, minOut, meta:{mint,name,symbol,mirrorSymbol,mirrorId,image}, now }
+   *   buy:  amount = SOL to spend,  minOut = min tokens
+   *   sell: amount = tokens to sell, minOut = min SOL
+   * Returns { state, trade } and never mutates the input state.
+   */
+  function executeTrade(state, req, fillPool) {
+    const s = clone(state);
+    s.footprints = s.footprints || {};
+    const cost = networkCost(s.settings);
+    const meta = req.meta;
+    const bps = effBps(fillPool, s.settings);
+    const now = req.now || Date.now();
+    const base = {
+      id: now.toString(36) + Math.random().toString(36).slice(2, 6),
+      t: now,
+      side: req.side,
+      mint: meta.mint,
+      symbol: meta.mirrorSymbol,
+      networkSol: cost,
+      priceSol: fillPool.priceSol,
+      priceUsd: fillPool.priceUsd,
+    };
+    const reject = (reason) => ({
+      state: s,
+      trade: Object.assign(base, { status: "rejected", reason, networkSol: 0 }),
+    });
+    const fail = (reason, quote) => {
+      const paid = Math.min(s.sol, cost);
+      s.sol -= paid;
+      s.realizedSol -= paid;
+      s.trades.unshift(
+        Object.assign(base, {
+          status: "failed",
+          reason,
+          networkSol: paid,
+          amountIn: req.amount,
+          impactPct: quote.priceImpactPct,
+        })
+      );
+      s.trades.length = Math.min(s.trades.length, 200);
+      return { state: s, trade: s.trades[0] };
+    };
+
+    if (!fillPool.ok) return reject("pool-unavailable");
+    if (!(req.amount > 0)) return reject("bad-amount");
+
+    if (req.side === "buy") {
+      if (s.sol + EPS < req.amount + cost) return reject("insufficient-sol");
+      const q = quoteBuy(fillPool, req.amount, bps);
+      if (q.amountOut + EPS < req.minOut) return fail("slippage", q);
+
+      s.sol -= req.amount + cost;
+      const pos =
+        s.positions[meta.mint] ||
+        (s.positions[meta.mint] = {
+          mint: meta.mint,
+          name: meta.name,
+          symbol: meta.symbol,
+          mirrorSymbol: meta.mirrorSymbol,
+          mirrorId: meta.mirrorId,
+          image: meta.image || "",
+          qty: 0,
+          costSol: 0,
+          openedAt: now,
+        });
+      pos.qty += q.amountOut;
+      pos.costSol += req.amount + cost;
+      pos.lastPriceSol = fillPool.priceSol;
+      pos.lastPriceUsd = fillPool.priceUsd;
+      const fp = s.footprints[meta.mint] || (s.footprints[meta.mint] = { dB: 0, dQ: 0 });
+      fp.dB -= q.amountOut;
+      fp.dQ += req.amount - q.feeSol;
+      s.trades.unshift(
+        Object.assign(base, {
+          status: "filled",
+          amountIn: req.amount,
+          amountOut: q.amountOut,
+          feeSol: q.feeSol,
+          impactPct: q.priceImpactPct,
+          execPriceSol: q.execPriceSol,
+        })
+      );
+    } else {
+      const pos = s.positions[meta.mint];
+      if (!pos || pos.qty <= 0) return reject("no-position");
+      const qty = Math.min(req.amount, pos.qty);
+      const q = quoteSell(fillPool, qty, bps);
+      if (q.amountOut + EPS < req.minOut) return fail("slippage", q);
+      if (s.sol + q.amountOut + EPS < cost) return reject("insufficient-sol");
+
+      const costPortion = pos.costSol * (qty / pos.qty);
+      const pnl = q.amountOut - cost - costPortion;
+      s.sol += q.amountOut - cost;
+      s.realizedSol += pnl;
+      pos.qty -= qty;
+      pos.costSol -= costPortion;
+      pos.lastPriceSol = fillPool.priceSol;
+      pos.lastPriceUsd = fillPool.priceUsd;
+      const fp = s.footprints[meta.mint] || (s.footprints[meta.mint] = { dB: 0, dQ: 0 });
+      fp.dB += qty - (qty * bps) / 1e4;
+      fp.dQ -= q.amountOut;
+      if (pos.qty <= pos.qty * 1e-9 + 1e-12) {
+        delete s.positions[meta.mint];
+        delete s.footprints[meta.mint]; // flat again: pool goes back to the real one
+      }
+      s.trades.unshift(
+        Object.assign(base, {
+          status: "filled",
+          amountIn: qty,
+          amountOut: q.amountOut,
+          feeSol: q.feeSol,
+          impactPct: q.priceImpactPct,
+          execPriceSol: q.execPriceSol,
+          pnlSol: pnl,
+        })
+      );
+    }
+    s.trades.length = Math.min(s.trades.length, 200);
+    return { state: s, trade: s.trades[0] };
+  }
+
+  // What a position is worth: at mid price, and if sold now through the pool.
+  function valuePosition(pos, pool) {
+    if (!pool || !pool.ok) {
+      const mid = pos.qty * num(pos.lastPriceSol);
+      return { mid, exit: mid, stale: true };
+    }
+    const mid = pos.qty * pool.priceSol;
+    const exit = quoteSell(pool, pos.qty, pool.feeBps).amountOut;
+    return { mid, exit, stale: false };
+  }
+
+  /* ---------- formatting ---------- */
+
+  const SUB = "0123456789";
+  const subscript = (n) => String(n).split("").map((d) => SUB[+d]).join("");
+
+  function fmtPrice(usd) {
+    const x = num(usd);
+    if (x === 0) return "0";
+    if (x >= 1000) return x.toLocaleString("en-US", { maximumFractionDigits: 0 });
+    if (x >= 1) return x.toFixed(2);
+    if (x >= 0.01) return x.toFixed(4);
+    // zeros = count of zeros right after "0." (x < 0.01 so at least 2)
+    let zeros = Math.floor(-Math.log10(x));
+    let digits = Math.round(x * Math.pow(10, zeros + 4));
+    if (digits >= 10000) {
+      zeros -= 1;
+      digits = Math.round(x * Math.pow(10, zeros + 4));
+    }
+    if (zeros < 4) return x.toFixed(zeros + 4);
+    return "0.0" + subscript(zeros) + String(digits);
+  }
+
+  function fmtCompact(v, prefix) {
+    const x = num(v);
+    const p = prefix || "";
+    const a = Math.abs(x);
+    if (a >= 1e12) return p + (x / 1e12).toFixed(2) + "T";
+    if (a >= 1e9) return p + (x / 1e9).toFixed(2) + "B";
+    if (a >= 1e6) return p + (x / 1e6).toFixed(2) + "M";
+    if (a >= 1e3) return p + (x / 1e3).toFixed(2) + "K";
+    if (a >= 1) return p + x.toFixed(2);
+    return p + x.toPrecision(3);
+  }
+
+  function fmtSol(v, dp) {
+    const x = num(v);
+    const d = dp == null ? (Math.abs(x) >= 100 ? 2 : 4) : dp;
+    return x.toFixed(d);
+  }
+
+  const fmtPct = (v, dp) => {
+    const x = num(v);
+    return (x > 0 ? "+" : "") + x.toFixed(dp == null ? 2 : dp) + "%";
+  };
+
+  const shortAddr = (a) => (a && a.length > 12 ? a.slice(0, 4) + "..." + a.slice(-4) : a || "");
+
+  return {
+    SOL_MINT,
+    isValidMint,
+    mirrorIdFor,
+    pickBestPair,
+    bestPairPerToken,
+    solUsdFromPair,
+    solUsdFromSolPairs,
+    buildMirror,
+    effBps,
+    quoteBuy,
+    quoteSell,
+    networkCost,
+    minOutFor,
+    newState,
+    executeTrade,
+    valuePosition,
+    fmtPrice,
+    fmtCompact,
+    fmtSol,
+    fmtPct,
+    shortAddr,
+  };
+});
+
+</script>
+<script>
+(function () {
+  "use strict";
+  var E = window.MirrorEngine;
+  var $ = function (s, r) { return (r || document).querySelector(s); };
+  var esc = function (s) {
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  };
+  // Market data source. If your browser blocks this origin (CORS), point this at your own
+  // pass-through proxy that serves the same /latest/dex/... paths.
+  var API = "https://api.dexscreener.com";
+  var POLL_MS = 10000;
+
+  /* ---------- storage (per browser; falls back to memory) ---------- */
+  var mem = {};
+  var store = {
+    get: function (k) { try { var v = localStorage.getItem(k); return v == null ? mem[k] || null : v; } catch (e) { return mem[k] || null; } },
+    set: function (k, v) { mem[k] = v; try { localStorage.setItem(k, v); } catch (e) { /* memory only */ } }
+  };
+  function loadState() {
+    try {
+      var s = JSON.parse(store.get("mirror.state.v1") || "null");
+      if (s && s.v === 1 && isFinite(s.sol) && s.positions && Array.isArray(s.trades) && s.settings) {
+        s.footprints = s.footprints || {};
+        return s;
+      }
+    } catch (e) { /* start fresh */ }
+    return E.newState(10);
+  }
+  function loadRecent() { try { var r = JSON.parse(store.get("mirror.recent.v1") || "[]"); return Array.isArray(r) ? r.slice(0, 6) : []; } catch (e) { return []; } }
+  var S = loadState();
+  var save = function () { store.set("mirror.state.v1", JSON.stringify(S)); };
+
+  /* ---------- UI state ---------- */
+  var ui = {
+    mode: "connecting", // connecting | live | sample
+    solUsd: 0,
+    selected: null,
+    pairs: {}, // mint -> last real pair
+    pools: {}, // mint -> mirror pool
+    candles: {}, // mint -> locally aggregated one-minute OHLC bars
+    syncing: false,
+    priceAlerts: {},
+    notifyReady: store.get("mirror.notifications.v1") === "true" && ("Notification" in window) && Notification.permission === "granted",
+    side: "buy",
+    amountStr: "",
+    busy: false,
+    receipt: null,
+    lastSync: 0,
+    failed: 0,
+    recent: loadRecent(),
+    resetArmed: false,
+    resetStart: S.startSol,
+    resetTimer: 0,
+    probeError: "",
+    cfgOpen: false
+  };
+
+  /* ---------- data sources ---------- */
+  function getJSON(url, ms) {
+    var c = new AbortController();
+    var t = setTimeout(function () { c.abort(); }, ms || 8000);
+    return fetch(url, { signal: c.signal }).then(function (r) {
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      return r.json();
+    }).finally(function () { clearTimeout(t); });
+  }
+  var pairsOf = function (j) { return Array.isArray(j) ? j : j && Array.isArray(j.pairs) ? j.pairs : []; };
+
+  var Live = {
+    probe: function () {
+      return getJSON(API + "/latest/dex/tokens/" + E.SOL_MINT, 7000).then(function (j) {
+        var p = E.solUsdFromSolPairs(pairsOf(j));
+        if (!p) throw new Error("no SOL price in response");
+        return p;
+      });
+    },
+    tokens: function (mints) {
+      var batches = [];
+      for (var i = 0; i < mints.length; i += 25) batches.push(mints.slice(i, i + 25));
+      return Promise.all(batches.map(function (batch) {
+        return getJSON(API + "/latest/dex/tokens/" + batch.join(","), 5000).then(pairsOf);
+      })).then(function (lists) { return [].concat.apply([], lists); });
+    },
+    search: function (q) {
+      return getJSON(API + "/latest/dex/search?q=" + encodeURIComponent(q)).then(pairsOf);
+    }
+  };
+
+  // Made-up tokens in the same shape as the real API, used when live data is unreachable.
+  var SAMPLE_SOL_USD = 152.4;
+  var SAMPLE_DEFS = [
+    { name: "Moonlit Frog", symbol: "MFROG", dex: "raydium", price: 0.000412, base: 160e6, supply: 1e9, vol: 184200, chg: [0.6, -2.1, 38.4] },
+    { name: "Sir Barkalot", symbol: "BARKS", dex: "pumpswap", price: 0.00318, base: 80e6, supply: 1e9, vol: 612000, chg: [-0.4, 3.2, -11.8] },
+    { name: "Tiny Rocket", symbol: "TNYR", dex: "pumpfun", price: 0.00000873, base: 200e6, supply: 1e9, vol: 9800, chg: [1.9, 14.5, 212.0] }
+  ].map(function (d) { d.mint = E.mirrorIdFor("sample:" + d.symbol); d.cur = d.price; return d; });
+  function samplePair(d) {
+    d.cur *= Math.exp((Math.random() - 0.5) * 0.03);
+    var native = d.cur / SAMPLE_SOL_USD;
+    return {
+      chainId: "solana", dexId: d.dex, url: "", pairAddress: E.mirrorIdFor("pool:" + d.symbol),
+      baseToken: { address: d.mint, name: d.name, symbol: d.symbol },
+      quoteToken: { address: E.SOL_MINT, name: "Wrapped SOL", symbol: "SOL" },
+      priceNative: String(native), priceUsd: String(d.cur),
+      liquidity: { usd: 2 * d.base * d.cur, base: d.base, quote: d.base * native },
+      fdv: d.supply * d.cur, marketCap: d.supply * d.cur,
+      volume: { h24: d.vol }, priceChange: { m5: d.chg[0], h1: d.chg[1], h24: d.chg[2] },
+      pairCreatedAt: Date.now() - 36 * 3600e3
+    };
+  }
+  var Sample = {
+    tokens: function (mints) {
+      return Promise.resolve(SAMPLE_DEFS.filter(function (d) { return mints.indexOf(d.mint) >= 0; }).map(samplePair));
+    },
+    search: function (q) {
+      var n = q.toLowerCase();
+      return Promise.resolve(SAMPLE_DEFS.filter(function (d) {
+        return d.name.toLowerCase().indexOf(n) >= 0 || d.symbol.toLowerCase().indexOf(n) >= 0;
+      }).map(samplePair));
+    }
+  };
+  var src = function () { return ui.mode === "live" ? Live : Sample; };
+
+  /* ---------- pools ---------- */
+  function rebuildPool(mint) {
+    var p = ui.pairs[mint];
+    if (!p) return;
+    var pool = E.buildMirror(p, ui.solUsd, S.footprints[mint]);
+    ui.pools[mint] = pool;
+    if (pool.ok) ui.solUsd = pool.solUsd;
+  }
+  function ingest(pairs, wanted) {
+    var best = {};
+    E.bestPairPerToken(pairs).forEach(function (p) { best[p.baseToken.address] = p; });
+    wanted.forEach(function (m) {
+      if (best[m]) { ui.pairs[m] = best[m]; rebuildPool(m); }
+      else if (!ui.pairs[m] && (!ui.pools[m] || ui.pools[m].ok)) ui.pools[m] = { ok: false, reason: "not-found" };
+    });
+    (pairs || []).forEach(function (p) {
+      if (!p || !p.baseToken || wanted.indexOf(p.baseToken.address) < 0) return;
+      var mint = p.baseToken.address, price = Number(p.priceUsd), minute = Math.floor(Date.now() / 60000) * 60000;
+      if (!(price > 0)) return;
+      var bars = ui.candles[mint] || (ui.candles[mint] = []), last = bars[bars.length - 1];
+      if (last && last.time === minute) { last.high = Math.max(last.high, price); last.low = Math.min(last.low, price); last.close = price; }
+      else { bars.push({ time: minute, open: price, high: price, low: price, close: price }); if (bars.length > 90) bars.shift(); }
+    });
+  }
+  function trackedMints() {
+    var set = {};
+    if (ui.selected) set[ui.selected] = 1;
+    Object.keys(S.positions).forEach(function (m) { set[m] = 1; });
+    return Object.keys(set).slice(0, 30);
+  }
+  function syncPools(mints) {
+    mints = mints || trackedMints();
+    if (!mints.length) return Promise.resolve();
+    var source = src();
+    ui.syncing = true;
+    return source.tokens(mints).then(function (pairs) {
+      var found = {};
+      (pairs || []).forEach(function (p) { if (p && p.baseToken) found[p.baseToken.address] = true; });
+      var missing = mints.filter(function (m) { return !found[m]; });
+      if (!missing.length || !source.search) return pairs || [];
+      return Promise.all(missing.map(function (m) {
+        return source.search(m).then(function (list) {
+          return (list || []).filter(function (p) { return p && p.baseToken && p.baseToken.address === m; });
+        }).catch(function () { return []; });
+      })).then(function (lists) { return (pairs || []).concat.apply(pairs || [], lists); });
+    }).then(function (pairs) {
+      ingest(pairs, mints);
+      mints.forEach(checkPriceAlert);
+      ui.lastSync = Date.now();
+      ui.failed = 0;
+    }).catch(function () { ui.failed++; }).then(function () { ui.syncing = false; });
+  }
+
+  /* ---------- formatting helpers ---------- */
+  var fmtUsdBig = function (v) { return v > 0 ? E.fmtCompact(v, "$") : "n/a"; };
+  var timeStr = function (t) { return new Date(t).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }); };
+  var ago = function (t) { var s = Math.max(0, Math.round((Date.now() - t) / 1000)); return s < 60 ? s + "s ago" : Math.round(s / 60) + "m ago"; };
+  var cls = function (v) { return v > 0 ? "up" : v < 0 ? "down" : ""; };
+  var parseAmt = function (s) { var n = parseFloat(String(s).replace(",", ".")); return isFinite(n) && n > 0 ? n : 0; };
+  var hue = function (s) { var h = 0; for (var i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) % 360; return h; };
+  function avatar(o) {
+    var img = typeof o.image === "string" && /^https:\/\//.test(o.image)
+      ? '<img src="' + esc(o.image) + '" alt="" loading="lazy" referrerpolicy="no-referrer">' : "";
+    return '<span class="av" style="--h:' + hue(o.mint || "x") + '">' + esc((o.symbol || "?").charAt(0).toUpperCase()) + img + "</span>";
+  }
+  document.addEventListener("error", function (e) { if (e.target && e.target.tagName === "IMG") e.target.remove(); }, true);
+
+  /* ---------- render: header, status, find ---------- */
+  function renderBalance() { $("#bal").textContent = E.fmtSol(S.sol); }
+
+  function renderStatus() {
+    var el = $("#status");
+    var html;
+    if (ui.mode === "connecting") {
+      el.className = "status";
+      html = '<span class="dot"></span><span class="msg">Connecting to market data...</span>';
+    } else if (ui.mode === "live") {
+      var stale = ui.failed > 0 && ui.lastSync;
+      el.className = "status " + (stale ? "stale" : "live");
+      html = '<span class="dot"></span><span class="msg">' + (stale
+        ? "Couldn't refresh. Showing prices from " + ago(ui.lastSync) + "."
+        : "Live data from DexScreener" + (ui.solUsd ? "  -  SOL $" + ui.solUsd.toFixed(2) : "")) + "</span>";
+    } else {
+      el.className = "status sample";
+      html = '<span class="dot"></span><span class="msg"><strong>Sample tokens.</strong> This page can\'t reach DexScreener from here (' + esc(ui.probeError || "blocked") + "), so the tokens below are made up. Open the standalone file on your own site for real Solana tokens.</span>" +
+        '<button class="linkbtn" type="button" data-act="retry">Retry live data</button>';
+    }
+    el.innerHTML = html;
+  }
+
+  function renderChips() {
+    var el = $("#chips");
+    var items, title;
+    if (ui.mode === "sample") {
+      title = "Try a sample";
+      items = SAMPLE_DEFS.map(function (d) { return { mint: d.mint, label: d.symbol }; });
+    } else {
+      title = ui.recent.length ? "Recent" : "";
+      items = ui.recent.map(function (r) { return { mint: r.mint, label: r.symbol }; });
+    }
+    el.innerHTML = items.length
+      ? '<span class="label">' + title + "</span>" + items.map(function (i) {
+        return '<button class="chip" type="button" data-act="pick" data-mint="' + esc(i.mint) + '">' + esc(i.label) + "</button>";
+      }).join("")
+      : "";
+  }
+
+  function setHint(text, isErr) {
+    var h = $("#findHint");
+    h.hidden = !text;
+    h.textContent = text || "";
+    h.className = "hint" + (isErr ? " err" : "");
+  }
+
+  function renderResults(pairs) {
+    var ul = $("#results");
+    if (!pairs || !pairs.length) { ul.hidden = true; ul.innerHTML = ""; return; }
+    ul.hidden = false;
+    ul.innerHTML = pairs.slice(0, 8).map(function (p) {
+      var b = p.baseToken;
+      var img = p.info && p.info.imageUrl;
+      return '<li><button class="row-btn" type="button" data-act="pick" data-mint="' + esc(b.address) + '">' +
+        avatar({ mint: b.address, symbol: b.symbol, image: img }) +
+        '<span style="min-width:0"><span class="nm">' + esc(b.name || b.symbol) + ' <span class="muted">' + esc(b.symbol) + '</span></span>' +
+        '<span class="sub">' + esc(p.dexId || "") + "  -  " + esc(E.shortAddr(b.address)) + "</span></span>" +
+        '<span class="rt">' + fmtUsdBig(Number(p.liquidity && p.liquidity.usd)) + '<span class="muted blk">liquidity</span></span></button></li>';
+    }).join("");
+  }
+
+  /* ---------- render: token card ---------- */
+  var REASONS = {
+    "no-liquidity": "This token has no pool depth data, so the mirror can't price a trade against it.",
+    "no-price": "No price is available for this pair yet.",
+    "no-sol-price": "Couldn't work out the SOL price for this pair.",
+    "not-found": "No Solana pool found for this token.",
+    unreachable: "Couldn't reach market data. Try again in a moment."
+  };
+
+  function renderToken() {
+    var el = $("#tokenCard");
+    var pool = ui.selected && ui.pools[ui.selected];
+    if (!ui.selected) {
+      el.innerHTML = '<div class="empty"><h2>Mirror any Solana token</h2>' +
+        "<p>The mirror reads a token's real pool, copies its depth into a test pool, and lets you trade test SOL against it.</p>" +
+        "<ol><li>Paste a token address, or search by name.</li><li>Trade with the same fees and price impact the real pool would charge.</li><li>Your wallet, positions and P&amp;L stay in this browser.</li></ol></div>";
+      return;
+    }
+    if (!pool) {
+      el.innerHTML = '<div class="tk-head">' + avatar({ mint: ui.selected, symbol: "?" }) + '<div class="who"><div class="nm">Loading pool...</div><div class="sub">' + esc(E.shortAddr(ui.selected)) + "</div></div></div>";
+      return;
+    }
+    if (!pool.ok) {
+      var known = S.positions[ui.selected];
+      el.innerHTML = '<div class="tk-head">' + avatar({ mint: ui.selected, symbol: known ? known.symbol : "?", image: known && known.image }) +
+        '<div class="who"><div class="nm">' + esc(known ? known.name : E.shortAddr(ui.selected)) + '</div></div></div>' +
+        '<p class="hint err">' + esc(REASONS[pool && pool.reason] || "This pool can't be mirrored right now.") + "</p>";
+      return;
+    }
+    var chg = pool.change24h;
+    var impact = pool.hasFootprint ? (pool.priceSol / pool.realPriceSol - 1) * 100 : 0;
+    var link = /^https:\/\/dexscreener\.com\//.test(pool.url) ? pool.url : "";
+    el.innerHTML =
+      '<div class="tk-head">' + avatar(pool) +
+      '<div class="who"><div class="nm">' + esc(pool.name) + "</div>" +
+      '<div class="sub"><span class="tag-test">TEST</span><span class="mono">' + esc(pool.mirrorSymbol) + "</span><span>mirrors " + esc(pool.symbol) + "</span></div></div>" +
+      '<button class="btn ghost" type="button" data-act="sync" style="height:34px;padding:0 10px" aria-label="Sync with the real pool"' + (ui.syncing ? ' disabled' : '') + '>' + (ui.syncing ? 'Syncing...' : 'Sync') + '</button></div>' +
+      '<div class="price-row"><span class="price">$' + E.fmtPrice(pool.realPriceUsd) + '</span>' +
+      '<span class="pill ' + cls(chg) + '" title="24h change">' + E.fmtPct(chg, 1) + " 24h</span></div>" +
+      '<div class="chart-wrap"><div class="chart-head"><span class="label">Price  -  1m candles</span><span class="muted" style="font-size:12px">Local live history</span></div>' + renderChart(ui.selected) + '</div>' +
+      (pool.hasFootprint && Math.abs(impact) >= 0.01
+        ? '<p class="note">Your test trades have moved the mirror price to $' + E.fmtPrice(pool.priceUsd) + " (" + E.fmtPct(impact) + "). The real pool is unchanged.</p>" : "") +
+      '<div class="ledger">' +
+      '<div><h3 class="label">Real pool</h3><dl>' +
+      "<div><dt>Liquidity</dt><dd>" + fmtUsdBig(pool.liquidityUsd) + "</dd></div>" +
+      "<div><dt>Volume 24h</dt><dd>" + fmtUsdBig(pool.volume24h) + "</dd></div>" +
+      "<div><dt>FDV</dt><dd>" + fmtUsdBig(pool.fdv) + "</dd></div>" +
+      "<div><dt>DEX</dt><dd>" + esc(pool.dexId || "n/a") + "</dd></div></dl></div>" +
+      '<div><h3 class="label">Mirror pool <span class="tag-test">TEST</span></h3><dl>' +
+      "<div><dt>" + esc(pool.mirrorSymbol) + "</dt><dd>" + E.fmtCompact(pool.baseReserve) + "</dd></div>" +
+      "<div><dt>SOL</dt><dd>" + E.fmtSol(pool.quoteReserveSol, pool.quoteReserveSol >= 100 ? 1 : 2) + "</dd></div>" +
+      "<div><dt>Pool fee</dt><dd>" + (E.effBps(pool, S.settings) / 100).toFixed(2) + "%" + (S.settings.feeBpsOverride === "" ? " est." : "") + "</dd></div>" +
+      "<div><dt>Synced</dt><dd>" + ago(pool.syncedAt) + "</dd></div></dl></div></div>" +
+      '<div class="tk-foot"><span title="' + esc(pool.mirrorId) + '">Mirror ID <span class="mono">' + esc(E.shortAddr(pool.mirrorId)) + "</span> (not a real address)</span>" +
+      (link ? '<a href="' + esc(link) + '" target="_blank" rel="noopener noreferrer">Real pool on DexScreener -></a>' : "") + "</div>";
+  }
+
+  function renderChart(mint) {
+    var bars = ui.candles[mint] || [];
+    if (!bars.length) return '<div class="chart-empty">Candles build as live prices arrive. New pairs may take a moment to appear.</div>';
+    var w = 720, h = 190, pad = 12, lo = Infinity, hi = -Infinity;
+    bars.forEach(function (b) { lo = Math.min(lo, b.low); hi = Math.max(hi, b.high); });
+    if (!(hi > lo)) { lo *= 0.995; hi *= 1.005; }
+    var y = function (v) { return pad + (hi - v) / (hi - lo) * (h - pad * 2); };
+    var step = (w - pad * 2) / bars.length, body = Math.max(2, Math.min(10, step * 0.62));
+    var shapes = bars.map(function (b, i) {
+      var x = pad + i * step + step / 2, rising = b.close >= b.open, color = rising ? "var(--up)" : "var(--down)";
+      var top = Math.min(y(b.open), y(b.close)), height = Math.max(1.5, Math.abs(y(b.close) - y(b.open)));
+      return '<g stroke="' + color + '" fill="' + color + '"><line x1="' + x.toFixed(1) + '" y1="' + y(b.high).toFixed(1) + '" x2="' + x.toFixed(1) + '" y2="' + y(b.low).toFixed(1) + '"/><rect x="' + (x - body / 2).toFixed(1) + '" y="' + top.toFixed(1) + '" width="' + body.toFixed(1) + '" height="' + height.toFixed(1) + '"/></g>';
+    }).join("");
+    return '<svg class="chart" viewBox="0 0 ' + w + ' ' + h + '" role="img" aria-label="Local one minute candlestick price chart"><path d="M' + pad + ' ' + (h - pad) + 'H' + (w - pad) + ' M' + pad + ' ' + pad + 'V' + (h - pad) + '" stroke="var(--rule)" fill="none"/>' + shapes + '</svg>';
+  }
+
+  /* ---------- render: trade panel ---------- */
+  function maxBuy() {
+    return Math.max(0, Math.floor((S.sol - E.networkCost(S.settings) - 1e-6) * 1e4) / 1e4);
+  }
+
+  function renderTrade() {
+    var el = $("#tradePanel");
+    var pool = ui.selected && ui.pools[ui.selected];
+    if (!ui.selected || !pool || !pool.ok) { el.hidden = true; el.innerHTML = ""; return; }
+    el.hidden = false;
+    var pos = S.positions[ui.selected];
+    if (ui.side === "sell" && !pos) ui.side = "buy";
+    var buy = ui.side === "buy";
+    var chips = buy
+      ? [0.1, 0.5, 1, 5].map(function (v) { return '<button class="chip" type="button" data-act="amt" data-val="' + v + '">' + v + "</button>"; }).join("") +
+        '<button class="chip" type="button" data-act="amt" data-val="max">Max</button>'
+      : [25, 50, 75, 100].map(function (v) { return '<button class="chip" type="button" data-act="pct" data-val="' + v + '">' + v + "%</button>"; }).join("");
+    var ov = S.settings.feeBpsOverride;
+    el.setAttribute("data-side", ui.side);
+    el.innerHTML =
+      '<div class="panel-head"><span class="label">Trade <span class="sym">' + esc(pool.mirrorSymbol) + '</span> <span class="tag-test">TEST</span></span>' +
+      '<span class="muted mono" style="font-size:12.5px">' + (pos ? "Holding " + E.fmtCompact(pos.qty) : "No position") + "</span></div>" +
+      '<div class="seg" role="group" aria-label="Side">' +
+      '<button type="button" data-act="side" data-val="buy" aria-pressed="' + buy + '">Buy</button>' +
+      '<button type="button" data-act="side" data-val="sell" aria-pressed="' + !buy + '"' + (pos ? "" : " disabled") + ">Sell</button></div>" +
+      '<div class="amt"><input id="amt" type="text" inputmode="decimal" autocomplete="off" placeholder="0" aria-label="' + (buy ? "SOL to spend" : "Tokens to sell") + '" value="' + esc(ui.amountStr) + '">' +
+      '<span class="unit">' + (buy ? "SOL" : esc(pool.mirrorSymbol)) + "</span></div>" +
+      '<div class="chips">' + chips + "</div>" +
+      '<dl class="quote" id="quote" aria-live="polite"></dl>' +
+      '<button class="act" type="button" id="go" data-act="go"></button>' +
+      '<div id="receipt" aria-live="polite"></div>' +
+      '<details class="cfg" id="cfg"' + (ui.cfgOpen ? " open" : "") + '><summary>Slippage and fees</summary><div class="cfg-grid">' +
+      '<label for="slip">Slippage %<input id="slip" type="text" inputmode="decimal" value="' + esc(S.settings.slipPct) + '"></label>' +
+      '<label for="prio">Priority fee (SOL)<input id="prio" type="text" inputmode="decimal" value="' + esc(S.settings.priorityFeeSol) + '"></label>' +
+      '<label for="feeo">Pool fee override (bps)<input id="feeo" type="text" inputmode="decimal" placeholder="auto ' + pool.feeBps + '" value="' + esc(ov) + '"></label>' +
+      "</div></details>";
+    updateQuote();
+    renderReceipt();
+  }
+
+  function currentQuote() {
+    var pool = ui.pools[ui.selected];
+    if (!pool || !pool.ok) return { err: "Pool unavailable." };
+    var amt = parseAmt(ui.amountStr);
+    if (!amt) return { empty: true };
+    var bps = E.effBps(pool, S.settings);
+    var cost = E.networkCost(S.settings);
+    if (ui.side === "buy") {
+      if (amt + cost > S.sol + 1e-9) return { err: "Not enough test SOL. You need " + E.fmtSol(amt + cost) + " including the network fee, and have " + E.fmtSol(S.sol) + "." };
+      return { q: E.quoteBuy(pool, amt, bps), amt: amt, bps: bps, cost: cost, pool: pool };
+    }
+    var pos = S.positions[ui.selected];
+    if (!pos) return { err: "You don't hold any " + pool.mirrorSymbol + " to sell." };
+    var a = Math.min(amt, pos.qty);
+    return { q: E.quoteSell(pool, a, bps), amt: a, bps: bps, cost: cost, pool: pool, pos: pos };
+  }
+
+  function updateQuote() {
+    var box = $("#quote"), go = $("#go");
+    if (!box || !go) return;
+    var pool = ui.pools[ui.selected];
+    if (!pool || !pool.ok) return;
+    var buy = ui.side === "buy";
+    go.textContent = ui.busy ? "Confirming..." : (buy ? "Buy " : "Sell ") + pool.mirrorSymbol;
+    var c = currentQuote();
+    ui.quote = c;
+    var ok = !!c.q;
+    go.disabled = ui.busy || !ok;
+    if (c.empty) {
+      box.innerHTML = '<span class="msg">Enter an amount to see the fill before you commit.</span>';
+      return;
+    }
+    if (c.err) { box.innerHTML = '<span class="msg err">' + esc(c.err) + "</span>"; return; }
+    var q = c.q, slip = Number(S.settings.slipPct) || 0, minOut = E.minOutFor(q, slip);
+    var imp = q.priceImpactPct;
+    var impCls = imp >= 15 ? "down" : imp >= 5 ? "warn" : "";
+    var rows = [];
+    if (buy) {
+      rows.push('<div class="big"><dt>You receive ~</dt><dd>' + E.fmtCompact(q.amountOut) + " " + esc(pool.mirrorSymbol) + "</dd></div>");
+      rows.push("<div><dt>Average price</dt><dd>$" + E.fmtPrice(q.execPriceSol * pool.solUsd) + "</dd></div>");
+    } else {
+      var pnl = q.amountOut - c.cost - c.pos.costSol * (c.amt / c.pos.qty);
+      rows.push('<div class="big"><dt>You receive ~</dt><dd>' + E.fmtSol(q.amountOut) + " SOL</dd></div>");
+      rows.push('<div><dt>Profit on this sale</dt><dd class="' + cls(pnl) + '">' + (pnl > 0 ? "+" : "") + E.fmtSol(pnl) + " SOL</dd></div>");
+    }
+    rows.push('<div><dt>Price impact</dt><dd class="' + impCls + '">' + imp.toFixed(imp < 1 ? 2 : 1) + "%</dd></div>");
+    rows.push("<div><dt>Pool fee " + (c.bps / 100).toFixed(2) + "%</dt><dd>" + E.fmtSol(q.feeSol, 5) + " SOL</dd></div>");
+    rows.push("<div><dt>Network + priority fee</dt><dd>" + E.fmtSol(c.cost, 5) + " SOL</dd></div>");
+    rows.push("<div><dt>Minimum at " + slip + "% slippage</dt><dd>" + (buy ? E.fmtCompact(minOut) + " " + esc(pool.mirrorSymbol) : E.fmtSol(minOut) + " SOL") + "</dd></div>");
+    if (imp >= 15) rows.push('<span class="msg err">This trade is a large share of the pool. Expect a poor fill, and a real one could fail.</span>');
+    else if (imp >= 5) rows.push('<span class="msg warn">Noticeable price impact. A smaller size gets a better price.</span>');
+    box.innerHTML = rows.join("");
+  }
+
+  function renderReceipt() {
+    var el = $("#receipt");
+    if (!el) return;
+    el.innerHTML = ui.receipt ? ui.receipt : "";
+  }
+
+  var REJECT = {
+    "insufficient-sol": "Not enough test SOL for the amount plus the network fee.",
+    "no-position": "You don't hold this token.",
+    "bad-amount": "Enter an amount above zero.",
+    "pool-unavailable": "The pool couldn't be read, so nothing was traded."
+  };
+  function receiptFor(t) {
+    var sym = esc(t.symbol);
+    if (t.status === "filled" && t.side === "buy") {
+      return '<div class="receipt ok"><strong>Bought ' + E.fmtCompact(t.amountOut) + " " + sym + "</strong> for " + E.fmtSol(t.amountIn) + " SOL at $" +
+        E.fmtPrice(t.execPriceSol * (t.priceUsd / t.priceSol)) + " average. Impact " + t.impactPct.toFixed(2) + "%, network fee " + E.fmtSol(t.networkSol, 5) + " SOL.</div>";
+    }
+    if (t.status === "filled") {
+      return '<div class="receipt ok"><strong>Sold ' + E.fmtCompact(t.amountIn) + " " + sym + "</strong> for " + E.fmtSol(t.amountOut) + ' SOL. Profit <span class="' + cls(t.pnlSol) + '">' +
+        (t.pnlSol > 0 ? "+" : "") + E.fmtSol(t.pnlSol) + " SOL</span> after fees.</div>";
+    }
+    if (t.status === "failed") {
+      return '<div class="receipt bad"><strong>Failed.</strong> The price moved past your slippage limit before the trade landed. The network fee of ' + E.fmtSol(t.networkSol, 5) + " SOL was still charged, like on mainnet.</div>";
+    }
+    return '<div class="receipt bad">' + esc(REJECT[t.reason] || "The trade was not placed.") + "</div>";
+  }
+
+  /* ---------- render: wallet ledger ---------- */
+  function positionValues() {
+    var out = [], sumExit = 0;
+    Object.keys(S.positions).forEach(function (m) {
+      var pos = S.positions[m];
+      var v = E.valuePosition(pos, ui.pools[m]);
+      sumExit += v.exit;
+      out.push({ pos: pos, v: v });
+    });
+    out.sort(function (a, b) { return b.v.exit - a.v.exit; });
+    return { list: out, sumExit: sumExit };
+  }
+
+  function adaptiveAdvice() {
+    var recent = S.trades.filter(function (t) { return t.status === "filled"; }).slice(0, 12);
+    var sells = recent.filter(function (t) { return t.side === "sell" && typeof t.pnlSol === "number"; });
+    var wins = sells.filter(function (t) { return t.pnlSol > 0; }).length;
+    var rate = sells.length ? wins / sells.length : 0.5;
+    var avgImpact = recent.length ? recent.reduce(function (sum, t) { return sum + (Number(t.impactPct) || 0); }, 0) / recent.length : 0;
+    var pool = ui.selected && ui.pools[ui.selected];
+    if (!recent.length) return { label: "Learning", text: "No completed trades yet. Enter a test amount to see estimated impact, fees, and minimum output before each trade." };
+    if (pool && pool.ok && avgImpact >= 10) return { label: "Reduce size", text: "Your recent fills averaged " + avgImpact.toFixed(1) + "% price impact. Try a smaller amount; adaptive sizing is a suggestion, not an automatic order." };
+    if (sells.length >= 3 && rate < 0.4) return { label: "Caution", text: "" + wins + " of your last " + sells.length + " completed sales were profitable. Consider smaller test orders and review fees before entering." };
+    if (pool && pool.ok && pool.change24h <= -20) return { label: "High volatility", text: "This token is down " + Math.abs(pool.change24h).toFixed(1) + "% over 24 hours. Expect fast price changes; check the minimum output and slippage." };
+    var sizeFactor = Math.max(0.25, Math.min(1, rate * (avgImpact > 5 ? 0.5 : 1)));
+    return { label: "Adaptive", text: "Based on " + recent.length + " recent fills and " + (sells.length ? Math.round(rate * 100) + "% profitable sales" : "no closed sales yet") + ", consider using up to " + Math.round(sizeFactor * 100) + "% of your usual test size. Estimates use your own history, not price prediction." };
+  }
+
+  function sendNotice(title, body) {
+    if (!ui.notifyReady || !("Notification" in window) || Notification.permission !== "granted") return;
+    try { new Notification(title, { body: body, tag: "mirror-" + title.toLowerCase().replace(/\W+/g, "-") }); } catch (e) { /* notifications may be blocked by the browser */ }
+  }
+
+  function checkPriceAlert(mint) {
+    var pool = ui.pools[mint];
+    if (!pool || !pool.ok || !ui.priceAlerts[mint]) { if (pool && pool.ok) ui.priceAlerts[mint] = pool.realPriceUsd; return; }
+    var previous = ui.priceAlerts[mint], current = pool.realPriceUsd;
+    ui.priceAlerts[mint] = current;
+    if (previous > 0 && Math.abs(current / previous - 1) >= 0.1) {
+      sendNotice(pool.symbol + " moved " + (current > previous ? "up" : "down"), "Price changed " + E.fmtPct((current / previous - 1) * 100, 1) + " since the last update.");
+    }
+  }
+
+  function renderWallet() {
+    var pv = positionValues();
+    var equity = S.sol + pv.sumExit;
+    var pnl = equity - S.startSol;
+    var pct = (pnl / S.startSol) * 100;
+    var usdFmt = function (v) { return ui.solUsd ? "$" + (v * ui.solUsd).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "n/a"; };
+    var advice = adaptiveAdvice();
+    var usd = ui.solUsd ? "  -  ~$" + (equity * ui.solUsd).toLocaleString("en-US", { maximumFractionDigits: 0 }) : "";
+    $("#summary").innerHTML =
+      '<div class="panel-head"><span class="label">Test equity <span class="tag-test">TEST</span></span></div>' +
+      '<div class="equity"><span class="big">' + E.fmtSol(equity) + '</span><span class="mono muted">SOL' + usd + "</span></div>" +
+      '<div class="mono ' + cls(pnl) + '" style="margin-top:4px">' + (pnl > 0 ? "+" : "") + E.fmtSol(pnl) + " SOL · " + usdFmt(pnl) + " (" + E.fmtPct(pct) + ") since start of " + E.fmtSol(S.startSol, S.startSol % 1 ? 2 : 0) + " SOL</div>" +
+      '<div class="stats"><div><span class="label">Cash</span><span class="mono">' + E.fmtSol(S.sol) + '</span></div>' +
+      '<div><span class="label">In positions</span><span class="mono">' + E.fmtSol(pv.sumExit) + '</span></div>' +
+      '<div><span class="label">Realized</span><span class="mono ' + cls(S.realizedSol) + '">' + (S.realizedSol > 0 ? "+" : "") + E.fmtSol(S.realizedSol) + " SOL</span><span class=\"mono " + cls(S.realizedSol) + "\" style=\"display:block;font-size:12px\">" + usdFmt(S.realizedSol) + "</span></div></div>" +
+      '<div class="advisor" role="status"><strong>Adaptive trade assistant · ' + esc(advice.label) + '</strong><p>' + esc(advice.text) + '</p></div>' +
+      '<div class="notify-row"><button class="chip" type="button" data-act="notifications">' + (ui.notifyReady ? "Notifications on" : "Enable notifications") + '</button><span class="hint">Trade fills and ±10% price moves</span></div>';
+
+    var posEl = $("#positions");
+    if (!pv.list.length) {
+      posEl.innerHTML = '<div class="panel-head"><span class="label">Positions</span></div><p class="hint" style="margin:0">No open positions. Positions are valued at what you would get if you sold now, after fees and price impact.</p>';
+    } else {
+      posEl.innerHTML = '<div class="panel-head"><span class="label">Positions</span><span class="muted" style="font-size:12px">value if sold now</span></div><ul class="pos">' +
+        pv.list.map(function (o) {
+          var p = o.pos, pnlS = o.v.exit - p.costSol, pnlP = (pnlS / p.costSol) * 100;
+          return '<li><button class="row-btn" type="button" data-act="pick" data-mint="' + esc(p.mint) + '">' + avatar(p) +
+            '<span style="min-width:0"><span class="nm mono">' + esc(p.mirrorSymbol) + '</span><span class="sub">' + E.fmtCompact(p.qty) + "  -  cost " + E.fmtSol(p.costSol) + (o.v.stale ? "  -  price unavailable" : "") + "</span></span>" +
+            '<span class="rt">' + E.fmtSol(o.v.exit) + ' SOL<span class="blk ' + cls(pnlS) + '">' + E.fmtPct(pnlP, 1) + "</span></span></button></li>";
+        }).join("") + "</ul>";
+    }
+
+    var hEl = $("#history");
+    if (!S.trades.length) {
+      hEl.innerHTML = '<div class="panel-head"><span class="label">History</span></div><p class="hint" style="margin:0">Your test trades will be listed here.</p>';
+    } else {
+      hEl.innerHTML = '<div class="panel-head"><span class="label">History</span><span class="muted" style="font-size:12px">last ' + Math.min(15, S.trades.length) + "</span></div><ul class=\"hist\">" +
+        S.trades.slice(0, 15).map(function (t) {
+          var sd = t.status === "failed" ? "FAILED" : t.side.toUpperCase();
+          var sdc = t.status === "failed" ? "warn" : t.side === "buy" ? "up" : "down";
+          var what, r = "";
+          if (t.status === "failed") { what = esc(t.symbol) + "  -  slippage"; r = "-" + E.fmtSol(t.networkSol, 5); }
+          else if (t.side === "buy") { what = E.fmtCompact(t.amountOut) + " " + esc(t.symbol); r = "-" + E.fmtSol(t.amountIn) + " SOL"; }
+          else { what = E.fmtCompact(t.amountIn) + " " + esc(t.symbol); r = '<span class="' + cls(t.pnlSol) + '">' + (t.pnlSol > 0 ? "+" : "") + E.fmtSol(t.pnlSol) + "</span>"; }
+          return '<li><span class="t">' + timeStr(t.t) + '</span><span class="sd ' + sdc + '">' + sd + '</span><span class="what mono">' + what + '</span><span class="r">' + r + "</span></li>";
+        }).join("") + "</ul>";
+    }
+
+    $("#resetPanel").innerHTML =
+      '<div class="panel-head"><span class="label">Reset test wallet</span></div>' +
+      '<div class="chips" style="margin-top:0"><span class="label">Start with</span>' +
+      [1, 10, 100].map(function (v) { return '<button class="chip" type="button" data-act="resetstart" data-val="' + v + '" aria-pressed="' + (ui.resetStart === v) + '">' + v + " SOL</button>"; }).join("") + "</div>" +
+      '<div class="reset-row"><button class="btn ghost" type="button" data-act="reset">' + (ui.resetArmed ? "Tap again to erase all trades" : "Reset wallet") + "</button></div>";
+  }
+
+  function renderAll() {
+    renderBalance(); renderStatus(); renderChips(); renderToken(); renderTrade(); renderWallet();
+  }
+
+  /* ---------- actions ---------- */
+  function remember(pool) {
+    ui.recent = [{ mint: pool.mint, symbol: pool.symbol }].concat(ui.recent.filter(function (r) { return r.mint !== pool.mint; })).slice(0, 6);
+    store.set("mirror.recent.v1", JSON.stringify(ui.recent));
+  }
+
+  function selectMint(mint, pairHint) {
+    setHint("");
+    renderResults(null);
+    ui.selected = mint;
+    ui.amountStr = "";
+    ui.receipt = null;
+    ui.side = "buy";
+    if (pairHint) { ui.pairs[mint] = pairHint; rebuildPool(mint); }
+    var need = !ui.pools[mint] || !ui.pairs[mint];
+    var done = function () {
+      if (!ui.pools[mint]) ui.pools[mint] = { ok: false, reason: "unreachable" };
+      var pool = ui.pools[mint];
+      if (pool.ok) remember(pool);
+      else setHint(REASONS[pool.reason] || "That pool can't be mirrored.", true);
+      renderAll();
+    };
+    renderAll();
+    if (need) { setHint("Loading pool..."); return syncPools([mint]).then(function () { setHint(""); done(); }); }
+    return syncPools([mint]).then(done);
+  }
+
+  function find(q) {
+    q = q.trim();
+    setHint(""); renderResults(null);
+    if (!q) { setHint("Paste a token address or type a name to search.", true); return Promise.resolve(); }
+    if (ui.mode === "connecting") { setHint("Still connecting to market data. Try again in a moment.", true); return Promise.resolve(); }
+    $("#findBtn").disabled = true;
+    var finish = function () { $("#findBtn").disabled = false; };
+    if (E.isValidMint(q)) {
+      return selectMint(q).then(finish, finish);
+    }
+    if (q.length < 2) { finish(); setHint("Type at least two characters.", true); return Promise.resolve(); }
+    setHint("Searching...");
+    return src().search(q).then(function (pairs) {
+      var best = E.bestPairPerToken(pairs);
+      if (!best.length) { setHint('No Solana tokens found for "' + q + '".', true); return; }
+      setHint(best.length === 1 ? "" : "Pick the right one. Check the address if there are lookalikes.");
+      if (best.length === 1) { return selectMint(best[0].baseToken.address, best[0]); }
+      renderResults(best);
+    }).catch(function () {
+      setHint("Search failed. Check your connection and try again.", true);
+    }).then(finish);
+  }
+
+  function runTrade() {
+    var c = currentQuote();
+    if (!c.q || ui.busy) return;
+    var mint = ui.selected, pool0 = ui.pools[mint];
+    var side = ui.side, slip = Number(S.settings.slipPct) || 0;
+    var minOut = E.minOutFor(c.q, slip), amount = c.amt;
+    var meta = { mint: mint, name: pool0.name, symbol: pool0.symbol, mirrorSymbol: pool0.mirrorSymbol, mirrorId: pool0.mirrorId, image: pool0.image };
+    ui.busy = true; ui.receipt = null; renderReceipt(); updateQuote();
+    // Simulated landing time: the price keeps moving until the "transaction" confirms.
+    var wait = 450 + Math.random() * 700;
+    return new Promise(function (r) { setTimeout(r, wait); })
+      .then(function () { return syncPools([mint]); })
+      .then(function () {
+        var fill = ui.pools[mint] && ui.pools[mint].ok ? ui.pools[mint] : pool0;
+        var res = E.executeTrade(S, { side: side, amount: amount, minOut: minOut, meta: meta, now: Date.now() }, fill);
+        S = res.state; save();
+        if (res.trade.status === "filled") {
+          sendNotice((side === "buy" ? "Buy filled: " : "Sell filled: ") + pool0.symbol,
+            side === "buy" ? E.fmtCompact(res.trade.amountOut) + " tokens for " + E.fmtSol(res.trade.amountIn) + " test SOL." : E.fmtSol(res.trade.amountOut) + " test SOL received; P&L " + E.fmtSol(res.trade.pnlSol) + " SOL.");
+        }
+        rebuildPool(mint);
+        ui.receipt = receiptFor(res.trade);
+        if (res.trade.status === "filled") ui.amountStr = "";
+        ui.busy = false;
+        if (side === "sell" && !S.positions[mint]) ui.side = "buy";
+        renderAll();
+      })
+      .catch(function () { ui.busy = false; ui.receipt = '<div class="receipt bad">Something went wrong and nothing was traded.</div>'; renderAll(); });
+  }
+
+  function setAmount(str) {
+    ui.amountStr = str;
+    var inp = $("#amt");
+    if (inp) inp.value = str;
+    updateQuote();
+  }
+
+  document.addEventListener("click", function (e) {
+    var b = e.target.closest("[data-act]");
+    if (!b) return;
+    var act = b.getAttribute("data-act"), val = b.getAttribute("data-val");
+    if (act === "pick") selectMint(b.getAttribute("data-mint"), null);
+    else if (act === "side") { ui.side = val; ui.amountStr = ""; ui.receipt = null; renderTrade(); }
+    else if (act === "amt") setAmount(val === "max" ? String(maxBuy()) : val);
+    else if (act === "pct") {
+      var pos = S.positions[ui.selected];
+      if (pos) setAmount(val === "100" ? String(pos.qty) : String(+(pos.qty * Number(val) / 100).toPrecision(10)));
+    }
+    else if (act === "go") runTrade();
+    else if (act === "sync") {
+      b.disabled = true;
+      var mint = ui.selected;
+      syncPools(mint ? [mint] : trackedMints()).then(function () { renderAll(); });
+    }
+    else if (act === "notifications") {
+      if (!("Notification" in window)) { ui.receipt = '<div class="receipt bad">This browser does not support notifications.</div>'; renderAll(); }
+      else Notification.requestPermission().then(function (permission) { ui.notifyReady = permission === "granted"; store.set("mirror.notifications.v1", String(ui.notifyReady)); renderWallet(); });
+    }
+    else if (act === "retry") { boot(); }
+    else if (act === "resetstart") { ui.resetStart = Number(val); renderWallet(); }
+    else if (act === "reset") {
+      if (!ui.resetArmed) {
+        ui.resetArmed = true; renderWallet();
+        clearTimeout(ui.resetTimer);
+        ui.resetTimer = setTimeout(function () { ui.resetArmed = false; renderWallet(); }, 5000);
+      } else {
+        clearTimeout(ui.resetTimer);
+        var ns = E.newState(ui.resetStart); ns.settings = S.settings;
+        S = ns; save();
+        ui.resetArmed = false; ui.receipt = null; ui.amountStr = ""; ui.side = "buy";
+        Object.keys(ui.pairs).forEach(rebuildPool);
+        renderAll();
+      }
+    }
+  });
+
+  document.addEventListener("input", function (e) {
+    var t = e.target;
+    if (t.id === "amt") { ui.amountStr = t.value; updateQuote(); }
+    else if (t.id === "slip" || t.id === "prio" || t.id === "feeo") {
+      var v = String(t.value).replace(",", ".");
+      var n = parseFloat(v);
+      if (t.id === "slip") S.settings.slipPct = isFinite(n) && n >= 0 && n <= 100 ? n : 15;
+      if (t.id === "prio") S.settings.priorityFeeSol = isFinite(n) && n >= 0 ? n : 0;
+      if (t.id === "feeo") S.settings.feeBpsOverride = v.trim() === "" || !isFinite(n) || n < 0 ? "" : n;
+      save(); updateQuote(); renderToken();
+    }
+  });
+
+  document.addEventListener("toggle", function (e) { if (e.target && e.target.id === "cfg") ui.cfgOpen = e.target.open; }, true);
+  $("#findForm").addEventListener("submit", function (e) { e.preventDefault(); find($("#q").value); });
+
+  /* ---------- boot and refresh loop ---------- */
+  var timer = 0;
+  function tick() {
+    if (document.hidden || ui.busy || ui.mode === "connecting") return;
+    syncPools().then(function () {
+      renderStatus(); renderToken(); updateQuote(); renderWallet();
+    });
+  }
+  document.addEventListener("visibilitychange", function () { if (!document.hidden) tick(); });
+
+  function boot() {
+    ui.mode = "connecting"; renderStatus();
+    return Live.probe().then(function (usd) {
+      ui.mode = "live"; ui.solUsd = usd; ui.probeError = "";
+    }).catch(function (err) {
+      ui.mode = "sample"; ui.solUsd = SAMPLE_SOL_USD;
+      ui.probeError = err && err.name === "AbortError" ? "timed out" : "request blocked or failed";
+    }).then(function () {
+      ui.pairs = {}; ui.pools = {}; ui.failed = 0;
+      var hashMint = (location.hash || "").slice(1);
+      var isSample = function (m) { return SAMPLE_DEFS.some(function (d) { return d.mint === m; }); };
+      if (ui.mode === "live") {
+        if (E.isValidMint(hashMint)) ui.selected = hashMint;
+        else if (ui.selected && isSample(ui.selected)) ui.selected = null;
+      } else if (!ui.selected) {
+        ui.selected = SAMPLE_DEFS[0].mint;
+      }
+      renderAll();
+      return syncPools();
+    }).then(function () {
+      renderAll();
+      clearInterval(timer);
+      timer = setInterval(tick, POLL_MS);
+    });
+  }
+
+  renderAll();
+  boot();
+})();
+</script>
+
+</body></html>
+
+
